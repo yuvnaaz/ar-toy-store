@@ -1,106 +1,41 @@
-AFRAME.registerComponent("createmarkers", {
-    init: async function() {
-      var mainScene = document.querySelector("#main-scene");
-      var toys = await this.getAllToys();
-      toys.map(toy => {
-        var marker = document.createElement("a-marker");
-        marker.setAttribute("id", toy.id);
-        marker.setAttribute("type", "pattern");
-        marker.setAttribute("url", toy.marker_pattern_url);
-        marker.setAttribute("cursor", {
-          rayOrigin: "mouse"
-        });
-        marker.setAttribute("markerhandler", {});
-        mainScene.appendChild(marker);
-  
-        // Adding 3D model to scene
-        var model = document.createElement("a-entity");
-        model.setAttribute("id", `model-${toy.id}`);
-        model.setAttribute("position", toy.model_geometry.position);
-        model.setAttribute("rotation", toy.model_geometry.rotation);
-        model.setAttribute("scale", toy.model_geometry.scale);
-        model.setAttribute("gltf-model", `url(${toy.model_url})`);
-        model.setAttribute("gesture-handler", {});
-        model.setAttribute("animation-mixer", {});
-        marker.appendChild(model);
-  
-        // description Container
-        var mainPlane = document.createElement("a-plane");
-        mainPlane.setAttribute("id", `main-plane-${toy.id}`);
-        mainPlane.setAttribute("position", { x: 0, y: 0, z: 0 });
-        mainPlane.setAttribute("rotation", { x: -90, y: 0, z: 0 });
-        mainPlane.setAttribute("material", {
-          color: "#ffd880"
-        });
-        mainPlane.setAttribute("width", 2.3);
-        mainPlane.setAttribute("height", 2.5);
-        marker.appendChild(mainPlane);
-  
-        // toy title background plane
-        var titlePlane = document.createElement("a-plane");
-        titlePlane.setAttribute("id", `title-plane-${toy.id}`);
-        titlePlane.setAttribute("position", { x: 0, y: 1.1, z: 0.1 });
-        titlePlane.setAttribute("rotation", { x: 0, y: 0, z: 0 });
-        titlePlane.setAttribute("width", 2.31);
-        titlePlane.setAttribute("height", 0.4);
-        titlePlane.setAttribute("material", { color: "#f14668" });
-        mainPlane.appendChild(titlePlane);
-  
-        // Toy title
-        var toyTitle = document.createElement("a-entity");
-        toyTitle.setAttribute("id", `toy-title-${toy.id}`);
-        toyTitle.setAttribute("position", { x: 1.3, y: 0, z: 0.1 });
-        toyTitle.setAttribute("rotation", { x: 0, y: 0, z: 0 });
-        toyTitle.setAttribute("text", {
-          font: "aileronsemibold",
-          color: "#290149",
-          width: 4.5,
-          height: 3,
-          align: "left",
-          value: toy.toy_name.toUpperCase()
-        });
-        titlePlane.appendChild(toyTitle);
-  
-        // description List
-        var description = document.createElement("a-entity");
-        description.setAttribute("id", `description-${toy.id}`);
-        description.setAttribute("position", { x: 0.04, y: 0, z: 0.1 });
-        description.setAttribute("rotation", { x: 0, y: 0, z: 0 });
-        description.setAttribute("text", {
-          font: "dejavu",
-          color: "#6b011f",
-          width: 2,
-          height: 5,
-          letterSpacing: 2,
-          lineHeight: 50,
-          align: "left",
-          value: `${toy.description}`
-        });
-        mainPlane.appendChild(description);
-  
-        var age = document.createElement("a-entity");
-        age.setAttribute("id", `age-${toy.id}`);
-        age.setAttribute("position", { x: -0.75, y: -0.8, z: 0.1 });
-        age.setAttribute("rotation", { x: 0, y: 0, z: 0 });
-        age.setAttribute("text", {
-          font: "aileronsemibold",
-          color: "#290149",
-          width: 2,
-          height: 5,
-          align: "center",
-          value: `AGE : ${toy.age_group}`
-        });
-  
-        mainPlane.appendChild(age);
-      });
-    },
-    getAllToys: async function() {
-      return await firebase
-        .firestore()
-        .collection("toy store")
-        .get()
-        .then(snap => {
-          return snap.docs.map(doc => doc.data());
-        });
-    }
-  });
+// Local toy catalogue. Replace these entries with real product data when ready.
+var toys = [
+  { id: "crane", toy_name: "Hydraulic Crane", description: "A construction truck with a rotating crane and movable arm.", age_group: "8–10 years", price: 24.99 },
+  { id: "train", toy_name: "Toy Train", description: "A colourful engine for imaginative railway adventures.", age_group: "3–6 years", price: 19.99 },
+  { id: "robot", toy_name: "Toy Robot", description: "A friendly robot for space and science adventures.", age_group: "6–10 years", price: 29.99 }
+];
+var selectedToy = toys[0];
+function showToy() {
+  selectedToy = toys.find(function(toy) { return toy.id === document.getElementById("toy-select").value; }) || toys[0];
+  document.getElementById("toy-name").textContent = selectedToy.toy_name;
+  document.getElementById("toy-description").textContent = selectedToy.description;
+  document.getElementById("toy-age").textContent = "Age: " + selectedToy.age_group;
+  document.getElementById("toy-price").textContent = "Price: " + money(selectedToy.price);
+  var rating = store.ratings[selectedToy.id];
+  document.getElementById("toy-rating").textContent = rating ? "Your rating: " + rating.rating + "/5" + (rating.feedback ? " — " + rating.feedback : "") : "No rating yet.";
+  var viewer = document.getElementById("toy-viewer");
+  var modelPath = "./assets/" + selectedToy.id + ".gltf";
+  if (viewer.getAttribute("src") !== modelPath) {
+    viewer.src = modelPath;
+    document.getElementById("model-status").textContent = "Loading 3D preview…";
+  }
+  viewer.alt = "3D model of " + selectedToy.toy_name;
+  if (document.querySelector("#ar-preview iframe")) startPreview();
+}
+function startPreview() {
+  if (!window.isSecureContext) { setARStatus("Camera requires HTTPS or localhost. Use the deployed HTTPS link on your phone."); return; }
+  var frame = document.createElement("iframe");
+  frame.title = "AR toy camera preview";
+  frame.allow = "camera";
+  frame.src = "./ar.html?v=4&toy=" + selectedToy.id;
+  document.getElementById("ar-preview").replaceChildren(frame);
+  document.getElementById("stop-ar").hidden = false;
+  document.getElementById("start-ar").hidden = true;
+  document.getElementById("ar-status").textContent = "Allow camera access when prompted, then scan the Hiro marker. Internet is required for AR libraries. If the preview stays blank, check camera permissions or stop and retry.";
+}
+function stopPreview() {
+  document.getElementById("ar-preview").replaceChildren();
+  document.getElementById("stop-ar").hidden = true;
+  document.getElementById("start-ar").hidden = false;
+  document.getElementById("ar-status").textContent = "Camera preview stopped.";
+}

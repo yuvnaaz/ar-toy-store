@@ -1,180 +1,64 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="en">
 <head>
-  <title>Menu Card</title>
-  <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
-  <!-- We import arjs version without NFT but with marker + location based support -->
-  <script src="https://aframe.io/releases/1.0.4/aframe.min.js"></script>
-  <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
-  <script src="https://raw.githack.com/fcor/arjs-gestures/master/dist/gestures.js"></script>
-
-  <!-- Bootstrap -->
-  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
-    integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous" />
-
-  <!-- Sweetalert -->
-  <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
-
-  <!-- The core Firebase JS SDK is always required and must be listed first -->
-  <script src="https://www.gstatic.com/firebasejs/8.2.9/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.2.9/firebase-firestore.js"></script>
-
-
-  <script src="https://www.gstatic.com/firebasejs/8.2.9/firebase-analytics.js"></script>
-
-  <script>
-  const firebaseConfig = {
-  apiKey: "AIzaSyBCmE7dSTysl7Wr4tj66ijHwXbihHo0VCg",
-  authDomain: "ar-project-c643f.firebaseapp.com",
-  projectId: "ar-project-c643f",
-  storageBucket: "ar-project-c643f.appspot.com",
-  messagingSenderId: "717421665706",
-  appId: "1:717421665706:web:0837ba8109449b46bf9fd3",
-  measurementId: "G-K4V0M0LDT2"
-};
-    // Initialize Firebase
-    firebase.initializeApp(firebaseConfig);
-    firebase.analytics();
-  </script>
-
-  <!-- Local StyleSheet -->
-  <link href="./style.css" rel="stylesheet" />
-
-  <!--Js Files-->
-  <script src="./markerHandler.js"></script>
-  <script src="./addMarkers.js"></script>
-  <script src="./addButtons.js"></script>
-  <script src = "./stars.js"></script>
-
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AR Toy Store</title>
+  <meta name="description" content="Explore original 3D toys, preview them in augmented reality, and try a simple demo shopping flow.">
+  <script type="module" src="https://cdn.jsdelivr.net/npm/@google/model-viewer@4.1.0/dist/model-viewer.min.js"></script>
+  <link href="./style.css?v=4" rel="stylesheet">
+  <script src="./addMarkers.js?v=4" defer></script>
+  <script src="./markerHandler.js?v=4" defer></script>
+  <script src="./addButtons.js?v=4" defer></script>
+  <script src="./preview.js?v=4" defer></script>
+  <script src="./firebase-config.js" defer></script>
+  <script src="./cloud.js?v=4" defer></script>
 </head>
-
-<body style="margin : 0px; overflow: hidden;">
-  <a-scene id="main-scene" vr-mode-ui="enabled: false" embedded arjs="sourceType: webcam; 
-      sourceWidth:1280; sourceHeight:960; 
-      displayWidth: 1280; displayHeight: 960; 
-      debugUIEnabled: false;" gesture-detector createmarkers createbuttons>
-    <!-- Camera -->
-    <a-entity camera></a-entity>
-<a-assets>
-    <a-asset-item id="crane-model" src="./toy_blaster/scene.gltf"></a-asset-item>
-</a-assets>
-<!--Pattern Marker-->
-<a-marker id="crane-marker" type="pattern" url="./toy_blaster/pattern-marker.patt" cursor="rayOrigin: mouse">
-    <a-entity id="crane-3D-model" position="-2.3 0 0.5" rotation="-90 0 0" scale="5 5 5" gltf-model="#crane-model" gesture-handler animation-mixer>
-    </a-entity>
-
-    <!-- Description -->
-    <a-plane position="0 0 0" width="2" height="2" rotation="-90 0 0" color="#ffd880">
-        <a-plane position="0 1.1 0.1" width="2.31" height="0.4" rotation="0 0 0" color="#f14668">
-            <a-entity position="1.3 0 0.1" rotation="0 0 0" text="font:aileronsemibold;value:HYDRAULIC CRANE;color:#290149;width: 4.5;height:3;align:left;"></a-entity>
-        </a-plane>
-
-        <a-entity position="0.1 0 0.1" rotation="0 0 0" text="color: #6b011f; align: left; width: 2;height:5;lineHeight:50;letterSpacing:2; font: dejavu;
-     value:PULL BACK AND GO: Friction powered crane truck toy, 360-degree rotating left and right, machine can pull up & down, swing left & right. High Quality Material: FunBlast crane toy is made of 100% high-quality abs plastics and metal shovel which is durable, light and Non-Toxic with strong crash resistance">
-        </a-entity>
-
-        <a-entity position="-0.75 -0.8 0.1" rotation="0 0 0" text="color: #290149; align: center; width: 2;height:5; font: aileronsemibold;
-     value:AGE : 8 - 10yrs">
-    </a-entity>
-        
-    </a-plane>
-</a-marker>
-
-  </a-scene>
-
-  <div id="button-div" class="fixed-bottom"></div>
-
-  <div class="container">
-    <div id="modal-div" class="modal" tabindex="-1" role="dialog">
-      <div class="modal-dialog" role="document">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">Order Summary</h5>
-            <button type="button" class="close" data-dismiss="modal" aria-label="Close" onclick="closeModal()">
-              <span aria-hidden="true">&times;</span>
-            </button>
-          </div>
-          <div class="modal-body">
-            <div class="table-responsive">
-              <table class="user table-condensed">
-                <thead>
-                  <tr>
-                    <td><strong>Item</strong></td>
-                    <td class="text-center"><strong>Price</strong></td>
-                    <td class="text-center"><strong>Quantity</strong></td>
-                    <td class="text-right"><strong>Total</strong></td>
-                  </tr>
-                </thead>
-                <tbody id="bill-user-body">
-            
-                </tbody>
-              </table>
-            </div>
-          </div>
-          <div class="modal-footer">
-            <button id="pay-button" type="button" class="btn btn-primary">
-              Pay Now
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-    </div>
-  </div>
-
-  <div class="container">
-    <div id="rating-modal-div" class="rating-modal" tabindex="-1" role="dialog">
-      <div class="modal-dialog" role="document">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">Rate toy</h5>
-            <button type="button" class="close" data-dismiss="modal" aria-label="Close" onclick="closeRatingModal()">
-              <span aria-hidden="true">&times;</span>
-            </button>
-          </div>
-          <div class="modal-body">
-            <div class="table-responsive">
-              <!--Text Field Input-->
-              <textarea class="form-control" id="feedback-input" rows="3"></textarea>
-
-              <!--Stars Input-->
-              <input id="rating-input" name="rating-input" class="rating rating-loading" data-min="0" data-max="5"
-                data-step="0.1" value="0" />
-
-            </div>
-          </div>
-          <div class="modal-footer">
-            <!--Submit Button-->
-            <button id="save-rating-button" type="button" class="btn btn-primary">
-              Submit
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <script>
-    function closeModal() {
-      document.getElementById("modal-div").style.display = "none";
-    }
-  </script>
-    <script>
-      function closeOrderModal() {
-        document.getElementById("order-modal-div").style.display = "none";
-      }
-    </script>
-     <script>
-      function closeRatingModal() {
-        document.getElementById("rating-modal-div").style.display = "none";
-      }
-    </script>
-
+<body>
+  <header><h1>AR Toy Store</h1><p>Explore a toy, add it to your order, and leave a rating.</p></header>
+  <main>
+    <p class="notice">Demo store — no real payments. Local saves work immediately; account saves are available when Firebase is configured.</p>
+    <section aria-labelledby="account-title"><h2 id="account-title">Cloud saves</h2><p id="cloud-status" role="status">Local mode — your data stays in this browser.</p><button id="sign-in" hidden>Sign in with Google</button><button id="sign-out" hidden>Sign out</button><button id="retry-cloud" hidden>Retry last order cloud save</button></section>
+    <label for="toy-select">Choose a toy</label>
+    <select id="toy-select"></select>
+    <section class="toy-card" aria-labelledby="toy-name">
+      <h2 id="toy-name"></h2>
+      <model-viewer id="toy-viewer" src="./assets/crane.gltf" alt="3D model of a hydraulic crane toy" camera-controls touch-action="pan-y" shadow-intensity="1" camera-orbit="35deg 70deg auto"></model-viewer>
+      <p id="model-status" role="status">Loading 3D preview…</p>
+      <p id="toy-description"></p>
+      <p id="toy-age"></p><p id="toy-price"></p><p id="toy-rating"></p>
+      <div id="button-div"></div>
+    </section>
+    <section aria-labelledby="preview-title">
+      <h2 id="preview-title">AR preview</h2>
+      <p>Start the camera and point it at a Hiro marker. The camera preview uses the same model shown above.</p>
+      <p><a href="https://raw.githubusercontent.com/AR-js-org/AR.js/master/data/images/hiro.png" target="_blank" rel="noopener">Open the Hiro marker</a> on another screen or print it.</p>
+      <button id="start-ar">Start camera preview</button>
+      <button id="stop-ar" hidden>Stop camera</button>
+      <p id="ar-status" role="status"></p>
+      <div id="ar-preview"></div>
+    </section>
+    <p id="message" role="status" aria-live="polite"></p>
+    <dialog id="modal-div" aria-labelledby="summary-title">
+      <h2 id="summary-title">Order Summary</h2>
+      <div class="table-responsive"><table><thead><tr><th>Item</th><th>Price</th><th>Quantity</th><th>Total</th><th>Action</th></tr></thead><tbody id="bill-user-body"></tbody></table></div>
+      <p id="total-bill"></p>
+      <button id="pay-button">Place demo order</button>
+      <button onclick="closeModal()">Close</button>
+    </dialog>
+    <dialog id="rating-modal-div" aria-labelledby="rating-title">
+      <h2 id="rating-title">Rate toy</h2>
+      <form id="rating-form">
+        <label for="rating-input">Rating (1–5)</label>
+        <select id="rating-input"><option value="1">1 star</option><option value="2">2 stars</option><option value="3">3 stars</option><option value="4">4 stars</option><option value="5" selected>5 stars</option></select>
+        <label for="feedback-input">Feedback (optional)</label>
+        <textarea id="feedback-input" rows="3" maxlength="500"></textarea>
+        <button id="save-rating-button" type="submit">Submit</button>
+        <button type="button" onclick="closeRatingModal()">Cancel</button>
+      </form>
+    </dialog>
+    <section><h2>Last demo order</h2><p id="last-order">No orders placed yet.</p></section>
+    <p class="notice">Portfolio demo. Prices are sample CAD prices. No delivery or payment processing.</p>
+  </main>
 </body>
-
 </html>
-
-
-

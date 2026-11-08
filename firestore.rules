@@ -1,0 +1,29 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function owner(uid) { return request.auth != null && request.auth.uid == uid; }
+    match /users/{uid}/ratings/{toyId} {
+      allow read: if owner(uid);
+      allow create, update: if owner(uid)
+        && toyId in ['crane', 'train', 'robot']
+        && request.resource.data.keys().hasOnly(['rating', 'feedback'])
+        && request.resource.data.keys().hasAll(['rating', 'feedback'])
+        && request.resource.data.rating is int
+        && request.resource.data.rating >= 1 && request.resource.data.rating <= 5
+        && request.resource.data.feedback is string
+        && request.resource.data.feedback.size() <= 500;
+    }
+    match /users/{uid}/orders/{orderId} {
+      allow read: if owner(uid);
+      allow create: if owner(uid)
+        && request.resource.data.keys().hasOnly(['id', 'items', 'total', 'date'])
+        && request.resource.data.keys().hasAll(['id', 'items', 'total', 'date'])
+        && request.resource.data.id == orderId
+        && request.resource.data.items is string && request.resource.data.items.size() <= 500
+        && request.resource.data.total is int && request.resource.data.total > 0 && request.resource.data.total <= 1000000
+        && request.resource.data.date is string && request.resource.data.date.size() <= 40;
+      // Permit identical retry writes, but do not let clients edit a placed order.
+      allow update: if owner(uid) && request.resource.data == resource.data;
+    }
+  }
+}
